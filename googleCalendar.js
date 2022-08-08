@@ -1,9 +1,16 @@
 const {google} = require('googleapis');
-
+require("dotenv").config();
 // Google calendar API settings
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 const calendar = google.calendar({version : "v3"});
-
+const calendarId = process.env.CALENDAR_ID;
+console.log(process.env.USER_EMAIL);
+const auth = new google.auth.JWT(
+    process.env.USER_EMAIL,
+    null,
+    process.env.PRIVATE_KEY,
+    SCOPES
+);
 
 const getEvents = async (dateTimeStart, dateTimeEnd) => {
   try {
