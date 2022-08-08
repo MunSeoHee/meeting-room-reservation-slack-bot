@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@slack/bolt": "^3.12.1"
+    "@googleapis/docs": "^1.0.1",
+    "@slack/bolt": "^3.12.1",
+    "google-auth-library": "^8.1.1",
+    "googleapis": "^105.0.0"
   }
 }

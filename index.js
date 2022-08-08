@@ -1,7 +1,10 @@
 const { App } = require('@slack/bolt');
 
 const app = new App({
-
+  token: 'xoxb-235556799909-3931319870608-rQHMnmKbp14SFrBX9Reyp1vA',
+  signingSecret: '2d2fe50a05a3650f7100e8a81469e232',
+  socketMode: true,
+  appToken: 'xapp-1-A03SJ95NCCD-3907601226610-527a147590afe5b94f4e329752cd30d49f2f19dc4c3485013e6bd8e79e39966f'
 });
 
 app.message('hello', async ({ message, say }) => {
