@@ -1,163 +1,35 @@
 const { App } = require('@slack/bolt');
+const blocks = require('./block');
+const googleCalendar = require('./googleCalendar');
 require("dotenv").config();
 
 const app = new App({
   token: process.env.TOKEN,
   signingSecret: process.env.SIGNING_SECRET,
   socketMode: true,
-  appToken: process.env.APP_TOKEN,
+  appToken: process.env.APP_TOKEN
 });
 
-app.message('hello', async ({ message, say }) => {
+app.message('', async ({ message, say }) => {
   await say({
-    text: `☀️ Good Morning`,
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `☀️ Good Morning`,
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "오늘의 문제",
-          },
-          action_id: "morning_button",
-        },
-      },
-    ],
+    text: `📝회의실 예약 도우미`,
+    blocks: blocks.Main
   });
 });
-app.action("morning_button", async ({ body, ack, say, client }) => {
+
+app.action("viewInsertModal", async ({ body, ack, say, client }) => {
     await ack();
     try {
       const result = await client.views.open({
         trigger_id: body.trigger_id,
         view: {
           type: "modal",
-          callback_id: "morning_modal",
+          callback_id: "InsertEvent",
           title: {
             type: "plain_text",
-            text: "미라클 모닝 챌린지",
+            text: "회의실 예약 폼",
           },
-          blocks: [
-            {
-                "type": "input",
-                "element": {
-                    "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select an item",
-                        "emoji": true
-                    },
-                    "options": [
-                        {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "*this is plain_text text*",
-                                "emoji": true
-                            },
-                            "value": "value-0"
-                        },
-                        {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "*this is plain_text text*",
-                                "emoji": true
-                            },
-                            "value": "value-1"
-                        },
-                        {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "*this is plain_text text*",
-                                "emoji": true
-                            },
-                            "value": "value-2"
-                        }
-                    ],
-                    "action_id": "static_select-action"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "회의실",
-                    "emoji": true
-                }
-            },
-            {
-                "type": "input",
-                "element": {
-                    "type": "multi_users_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select users",
-                        "emoji": true
-                    },
-                    "action_id": "multi_users_select-action"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "참석 인원",
-                    "emoji": true
-                }
-            },
-            {
-                "type": "input",
-                "element": {
-                    "type": "datepicker",
-                    "initial_date": "1990-04-28",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select a date",
-                        "emoji": true
-                    },
-                    "action_id": "datepicker-action"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "사용 일시",
-                    "emoji": true
-                }
-            },
-            {
-                "type": "input",
-                "element": {
-                    "type": "timepicker",
-                    "initial_time": "13:37",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select time",
-                        "emoji": true
-                    },
-                    "action_id": "timepicker-action"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "시작 시간",
-                    "emoji": true
-                }
-            },
-            {
-                "type": "input",
-                "element": {
-                    "type": "timepicker",
-                    "initial_time": "13:37",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select time",
-                        "emoji": true
-                    },
-                    "action_id": "timepicker-action"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "종료 시간",
-                    "emoji": true
-                }
-            }
-        ],
+          blocks: blocks.CalendarInsertModal,
           submit: {
             type: "plain_text",
             text: "Submit",
@@ -170,7 +42,31 @@ app.action("morning_button", async ({ body, ack, say, client }) => {
     }
   });
 
-app.view("morning_modal", async ({ ack, body, view, client}) => {
+app.action("viewGetModal", async ({ body, ack, say, client }) => {
+  await ack();
+  try {
+    const result = await client.views.open({
+      trigger_id: body.trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "GetEvent",
+        title: {
+          type: "plain_text",
+          text: "회의실 조회 폼",
+        },
+        blocks: blocks.CalendarGetModal,
+        submit: {
+          type: "plain_text",
+          text: "Submit",
+        },
+      },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+app.view("InsertEvent", async ({ ack, body, view, client}) => {
 await ack();
 // const question = view.blocks[1]["label"]["text"];
 // const answer = view["state"]["values"]["question"]["answer"]["value"];
@@ -187,7 +83,34 @@ try {
 }
 });
 
+app.view("GetEvent", async ({ ack, body, view, client}) => {
+  await ack();
+  const selectedDate = view["state"]["values"]["input"]["datepicker"]["selected_date"];
+  const eventList = await googleCalendar.getEvents(selectedDate+"T00:00:00Z", selectedDate+"T23:59:59Z");
+
+  for (const [key, value] of Object.entries(eventList)) {
+    console.log(`${key}: ${value}`);
+    for (const [ikey, ivalue] of Object.entries(value)) {
+      console.log(JSON.stringify(ivalue));
+      console.log(ivalue.summary, ivalue.creator.email, ivalue.summary);
+    }
+  }
+
+  try {
+      await client.chat.postMessage({
+      channel: body.user.id,
+      text: `${view}`,
+      });
+  } catch (error) {
+      console.error(error);
+  }
+  });
+
 (async () => {
-  await app.start(process.env.PORT || 3000);
-  console.log('⚡️ Bolt app is running!');
+  try{
+    await app.start(process.env.PORT || 3000);
+    console.log('⚡️ Bolt app is running!');
+  } catch (error) {
+    console.error(error);
+  }
 })();
