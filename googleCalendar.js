@@ -43,48 +43,44 @@ exports.getEvents = async (dateTimeStart, dateTimeEnd) => {
 
 exports.insertEvents = async (dateTimeStart, dateTimeEnd) => {
   try {
-    event = {
-      'summary': 'itsplay의 OpenAPI 수업',
-      'location': '서울특별시 성북구 정릉동 정릉로 77',
-      'description': 'itsplay와 OpenAPI 수업에 대한 설명입니다.',
+    var event = {
+      'summary': 'Google I/O 2015',
+      'location': '800 Howard St., San Francisco, CA 94103',
+      'description': 'A chance to hear more about Google\'s developer products.',
       'start': {
-          'dateTime': today + 'T09:00:00',
-          'timeZone': 'Asia/Seoul',
+        'dateTime': '2015-05-28T09:00:00-07:00',
+        'timeZone': 'America/Los_Angeles',
       },
       'end': {
-          'dateTime': today + 'T10:00:00',
-          'timeZone': 'Asia/Seoul',
+        'dateTime': '2015-05-28T17:00:00-07:00',
+        'timeZone': 'America/Los_Angeles',
       },
       'recurrence': [
-          'RRULE:FREQ=DAILY;COUNT=2'
+        'RRULE:FREQ=DAILY;COUNT=2'
       ],
       'attendees': [
-          {'email': 'lpage@example.com'},
-          {'email': 'sbrin@example.com'},
+        {'email': 'lpage@example.com'},
+        {'email': 'sbrin@example.com'},
       ],
       'reminders': {
-          'useDefault': False,
-          'overrides': [
-              {'method': 'email', 'minutes': 24 * 60},
-              {'method': 'popup', 'minutes': 10},
-          ],
+        'useDefault': false,
+        'overrides': [
+          {'method': 'email', 'minutes': 24 * 60},
+          {'method': 'popup', 'minutes': 10},
+        ],
       },
-  };
-    return new Promise(async (resolve, reject) => {
-      let events = Array();
-      for (const [key, value] of Object.entries(CalendarId)) {
-        let response = await calendar.events.list({
-          auth: auth,
-          calendarId: value,
-          timeMin: dateTimeStart,
-          timeMax: dateTimeEnd,
-          timeZone: 'Asia/Seoul',
-          singleEvents: true,
-          orderBy: 'startTime'
-        });
-        events[key] = response['data']['items'];
+    };
+
+    calendar.events.insert({
+      auth: auth,
+      calendarId: 'primary',
+      resource: event,
+    }, function(err, event) {
+      if (err) {
+        console.log('There was an error contacting the Calendar service: ' + err);
+        return;
       }
-      resolve(events);
+      console.log('Event created: %s', event.htmlLink);
     });
   } catch (error) {
       console.log(`Error at getEvents --> ${error}`);
