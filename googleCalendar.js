@@ -26,7 +26,9 @@ exports.getEvents = async (dateTimeStart, dateTimeEnd) => {
           calendarId: value,
           timeMin: dateTimeStart,
           timeMax: dateTimeEnd,
-          timeZone: 'Asia/Seoul'
+          timeZone: 'Asia/Seoul',
+          singleEvents: true,
+          orderBy: 'startTime'
         });
         events[key] = response['data']['items'];
       }

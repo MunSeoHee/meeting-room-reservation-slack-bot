@@ -86,20 +86,58 @@ try {
 app.view("GetEvent", async ({ ack, body, view, client}) => {
   await ack();
   const selectedDate = view["state"]["values"]["input"]["datepicker"]["selected_date"];
-  const eventList = await googleCalendar.getEvents(selectedDate+"T00:00:00Z", selectedDate+"T23:59:59Z");
+  const allEventList = await googleCalendar.getEvents(selectedDate+"T00:00:00Z", selectedDate+"T23:59:59Z");
+  const jsonBlocks = [];
+  for (const [roomTitle, eventList] of Object.entries(allEventList)) {
+    jsonBlocks.push({
+      "type": "divider"
+    });
+    jsonBlocks.push({
+      "type": "context",
+      "elements": [
+        {
+          "type": "plain_text",
+          "text": roomTitle,
+          "emoji": false
+        }
+      ]
+    });
+    jsonBlocks.push({
+      "type": "divider"
+    });
 
-  for (const [key, value] of Object.entries(eventList)) {
-    console.log(`${key}: ${value}`);
-    for (const [ikey, ivalue] of Object.entries(value)) {
-      console.log(JSON.stringify(ivalue));
-      console.log(ivalue.summary, ivalue.creator.email, ivalue.summary);
+    for (const [key, event] of Object.entries(eventList)) {
+      if (!event.summary) continue;
+      console.log(event);
+      jsonBlocks.push({
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*" + event.summary + "*"
+        }
+      });
+      jsonBlocks.push({
+        "type": "section",
+        "fields": [
+          {
+            "type": "plain_text",
+            "text": event.creator.email,
+            "emoji": true
+          },
+          {
+            "type": "plain_text",
+            "text": event.start.dateTime.split('T')[1].split('+')[0].slice(0,5) + "-" + event.end.dateTime.split('T')[1].split('+')[0].slice(0,5),
+            "emoji": true
+          }
+        ]
+      });
     }
   }
 
   try {
       await client.chat.postMessage({
       channel: body.user.id,
-      text: `${view}`,
+      blocks: jsonBlocks,
       });
   } catch (error) {
       console.error(error);
