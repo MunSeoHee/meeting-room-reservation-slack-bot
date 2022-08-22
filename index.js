@@ -87,7 +87,7 @@ app.view("GetEvent", async ({ ack, body, view, client}) => {
   await ack();
   const selectedDate = view["state"]["values"]["input"]["datepicker"]["selected_date"];
   const allEventList = await googleCalendar.getEvents(selectedDate+"T00:00:00Z", selectedDate+"T23:59:59Z");
-  const jsonBlocks = [];
+  let jsonBlocks = [];
   for (const [roomTitle, eventList] of Object.entries(allEventList)) {
     jsonBlocks.push({
       "type": "divider"
@@ -108,7 +108,6 @@ app.view("GetEvent", async ({ ack, body, view, client}) => {
 
     for (const [key, event] of Object.entries(eventList)) {
       if (!event.summary) continue;
-      console.log(event);
       jsonBlocks.push({
         "type": "section",
         "text": {
@@ -133,7 +132,7 @@ app.view("GetEvent", async ({ ack, body, view, client}) => {
       });
     }
   }
-
+  jsonBlocks = jsonBlocks.concat(blocks.Main);
   try {
       await client.chat.postMessage({
       channel: body.user.id,
