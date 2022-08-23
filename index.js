@@ -80,7 +80,11 @@ app.view("InsertEvent", async ({ ack, body, view, client }) => {
     view["state"]["values"]["StartTime"]["StartTime"]["selected_time"];
   const EndTime =
     view["state"]["values"]["EndTime"]["EndTime"]["selected_time"];
-  console.log(body.user.id);
+
+  const result = await client.users.info({
+    user: body.user.id,
+  });
+  console.log(result["user"]["profile"]["email"]);
   try {
     await client.chat.postMessage({
       channel: body.user.id,
