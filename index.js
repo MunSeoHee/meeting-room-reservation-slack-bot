@@ -67,25 +67,21 @@ app.action("viewGetModal", async ({ body, ack, say, client }) => {
 
 app.view("InsertEvent", async ({ ack, body, view, client }) => {
   await ack();
-  const meetingRoom =
-    view["state"]["values"]["meetingRoom"]["meetingRoom"]["selected_option"][
-      "value"
-    ];
-  const attendeesList =
-    view["state"]["values"]["multiUserSelect"]["multiUserSelect"][
-      "selected_users"
-    ];
+  const meetingRoom = view["state"]["values"]["meetingRoom"]["meetingRoom"]["selected_option"]["value"];
+  const attendeesIdList = view["state"]["values"]["multiUserSelect"]["multiUserSelect"]["selected_users"];
+  attendeesIdList.unshift(body.user.id);
   const date = view["state"]["values"]["Date"]["Date"]["selected_date"];
-  const startTime =
-    view["state"]["values"]["StartTime"]["StartTime"]["selected_time"];
-  const EndTime =
-    view["state"]["values"]["EndTime"]["EndTime"]["selected_time"];
+  const startTime = view["state"]["values"]["StartTime"]["StartTime"]["selected_time"];
+  const EndTime = view["state"]["values"]["EndTime"]["EndTime"]["selected_time"];
+  let attendeesEmailList = [];
 
-  const result = await client.users.info({
-    user: body.user.id,
-  });
-  console.log(result["user"]["profile"]["email"]);
   try {
+    for (const userId of attendeesIdList) {
+      const createUserInfo = await client.users.info({user: userId});
+      attendeesEmailList.push(createUserInfo["user"]["profile"]["email"]);
+    }
+    console.log(attendeesEmailList);
+    const err = await googleCalendar.insertEvents(date + "T" + startTime + "Z", date + "T" + EndTime + "Z", "테스트", attendeesEmailList);
     await client.chat.postMessage({
       channel: body.user.id,
       text: `${view}`,
@@ -97,8 +93,7 @@ app.view("InsertEvent", async ({ ack, body, view, client }) => {
 
 app.view("GetEvent", async ({ ack, body, view, client }) => {
   await ack();
-  const selectedDate =
-    view["state"]["values"]["input"]["datepicker"]["selected_date"];
+  const selectedDate = view["state"]["values"]["input"]["datepicker"]["selected_date"];
   const allEventList = await googleCalendar.getEvents(
     selectedDate + "T00:00:00Z",
     selectedDate + "T23:59:59Z"
