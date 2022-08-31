@@ -2,6 +2,8 @@ const now = new Date();
 const year = now.getFullYear();
 const month = now.getMonth() + 1;
 const date = now.getDate();
+const hours = now.getHours();
+const minutes = now.getMinutes();
 
 module.exports = {
   CalendarInsertModal: [
@@ -72,7 +74,7 @@ module.exports = {
       block_id: "Date",
       element: {
         type: "datepicker",
-        initial_date: "1990-04-28",
+        initial_date: year + "-" + month + "-" + date,
         placeholder: {
           type: "plain_text",
           text: "Select a date",
@@ -91,7 +93,7 @@ module.exports = {
       block_id: "StartTime",
       element: {
         type: "timepicker",
-        initial_time: "13:37",
+        initial_time: hours + ":" + minutes,
         placeholder: {
           type: "plain_text",
           text: "Select time",
@@ -110,7 +112,7 @@ module.exports = {
       block_id: "EndTime",
       element: {
         type: "timepicker",
-        initial_time: "13:37",
+        initial_time: hours + ":" + minutes,
         placeholder: {
           type: "plain_text",
           text: "Select time",
