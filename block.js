@@ -25,7 +25,7 @@ module.exports = {
               text: "3층 대회의실 (10인)",
               emoji: true,
             },
-            value: "Big",
+            value: "large",
           },
           {
             text: {
@@ -51,6 +51,19 @@ module.exports = {
         emoji: true,
       },
     },
+    {
+			type: "input",
+      block_id: "useReason",
+			element: {
+				type: "plain_text_input",
+				action_id: "useReason"
+			},
+			label: {
+				type: "plain_text",
+				text: "사용 사유",
+				emoji: true
+			}
+		},
     {
       type: "input",
       block_id: "multiUserSelect",

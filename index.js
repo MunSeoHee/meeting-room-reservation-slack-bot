@@ -73,15 +73,16 @@ app.view("InsertEvent", async ({ ack, body, view, client }) => {
   const date = view["state"]["values"]["Date"]["Date"]["selected_date"];
   const startTime = view["state"]["values"]["StartTime"]["StartTime"]["selected_time"];
   const EndTime = view["state"]["values"]["EndTime"]["EndTime"]["selected_time"];
-  let attendeesEmailList = [];
+  const useReason = view["state"]["values"]["useReason"]["useReason"]["value"];
+  let attendeesEmailJsonList = [];
 
   try {
     for (const userId of attendeesIdList) {
       const createUserInfo = await client.users.info({user: userId});
-      attendeesEmailList.push(createUserInfo["user"]["profile"]["email"]);
+      attendeesEmailJsonList.push({'email' : createUserInfo["user"]["profile"]["email"]});
     }
-    console.log(attendeesEmailList);
-    const err = await googleCalendar.insertEvents(date + "T" + startTime + "Z", date + "T" + EndTime + "Z", "테스트", attendeesEmailList);
+
+    const err = await googleCalendar.insertEvents(date + "T" + startTime + ":00", date + "T" + EndTime + ":00", attendeesEmailJsonList, useReason, meetingRoom);
     await client.chat.postMessage({
       channel: body.user.id,
       text: `${view}`,
@@ -96,8 +97,10 @@ app.view("GetEvent", async ({ ack, body, view, client }) => {
   const selectedDate = view["state"]["values"]["input"]["datepicker"]["selected_date"];
   const allEventList = await googleCalendar.getEvents(
     selectedDate + "T00:00:00Z",
-    selectedDate + "T23:59:59Z"
+    selectedDate + "T23:59:59Z",
+    "all"
   );
+  console.log(allEventList);
   let jsonBlocks = [];
   for (const [roomTitle, eventList] of Object.entries(allEventList)) {
     jsonBlocks.push({

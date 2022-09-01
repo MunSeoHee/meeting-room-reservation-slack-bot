@@ -1,10 +1,15 @@
 const { google } = require("googleapis");
 require("dotenv").config();
 
-const SCOPES = ["https://www.googleapis.com/auth/calendar", 'https://www.googleapis.com/auth/sqlservice.admin'];
+const SCOPES = [
+  "https://www.googleapis.com/auth/calendar",
+  'https://www.googleapis.com/auth/sqlservice.admin',
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/admin.directory.resource.calendar"
+];
 const CalendarId = {
   large: process.env.CALENDAR_LARGE_ID,
-  midium: process.env.CALENDAR_MIDIUM_ID,
+  medium: process.env.CALENDAR_MIDIUM_ID,
   small: process.env.CALENDAR_SMALL_ID,
   test: process.env.CALENDAR_TEST_ID,
 };
@@ -13,7 +18,7 @@ const jwtClient = new google.auth.JWT(
   process.env.USER_EMAIL,
   null,
   process.env.PRIVATE_KEY,
-  SCOPES
+  SCOPES,
 );
 const calendar = google.calendar({
   version: "v3",
@@ -26,21 +31,37 @@ const auth = new google.auth.GoogleAuth({
   scopes: SCOPES,
 });
 
-exports.getEvents = async (dateTimeStart, dateTimeEnd) => {
+exports.getEvents = async (dateTimeStart, dateTimeEnd, meetingRoom = "all") => {
   try {
     return new Promise(async (resolve, reject) => {
       let events = Array();
-      for (const [key, value] of Object.entries(CalendarId)) {
+      if (meetingRoom === 'all') {
+        for (const [key, value] of Object.entries(CalendarId)) {
+          let response = await calendar.events.list({
+            auth: jwtClient,
+            calendarId: value,
+            timeMin: dateTimeStart,
+            timeMax: dateTimeEnd,
+            timeZone: "Asia/Seoul",
+            singleEvents: true,
+            orderBy: "startTime",
+          }
+          );
+          events[key] = response["data"]["items"];
+        }
+      }
+      else {
         let response = await calendar.events.list({
-          auth: auth,
-          calendarId: value,
+          auth: jwtClient,
+          calendarId: CalendarId[meetingRoom],
           timeMin: dateTimeStart,
           timeMax: dateTimeEnd,
           timeZone: "Asia/Seoul",
           singleEvents: true,
           orderBy: "startTime",
-        });
-        events[key] = response["data"]["items"];
+        }
+        );
+        events[meetingRoom] = response["data"]["items"];
       }
       resolve(events);
     });
@@ -50,46 +71,22 @@ exports.getEvents = async (dateTimeStart, dateTimeEnd) => {
   }
 };
 
-exports.insertEvents = async (dateTimeStart, dateTimeEnd, summary, AttendeesEmailList) => {
+exports.insertEvents = async (dateTimeStart, dateTimeEnd, attendeesEmailList, useReason, meetingRoom) => {
   try {
     return new Promise(async (resolve, reject) => {
-      // const event = {
-      //   summary: summary,
-      //   start: {
-      //     dateTime: dateTimeStart,
-      //     timeZone: "Asia/Seoul",
-      //   },
-      //   end: {
-      //     dateTime: dateTimeEnd,
-      //     timeZone: "Asia/Seoul",
-      //   },
-      //   attendees: [
-      //     { email: "sua@fanding.kr" },
-      //   ],
-      //   reminders: {
-      //     useDefault: false,
-      //     overrides: [{ method: "email", minutes: 24 * 60 }],
-      //   },
-      // };
+      const event = await this.getEvents(dateTimeStart, dateTimeEnd, meetingRoom);
+      console.log(event);
       var calendarEvent = {
-        summary: "Test Event added by Node.js",
-        description: "This event was created by Node.js",
+        summary: useReason,
         start: {
-          dateTime: "2022-06-03T09:00:00-02:00",
-          timeZone: "Asia/Kolkata",
+          dateTime: dateTimeStart,
+          timeZone: "Asia/Seoul",
         },
         end: {
-          dateTime: "2022-06-04T17:00:00-02:00",
-          timeZone: "Asia/Kolkata",
+          dateTime: dateTimeEnd,
+          timeZone: "Asia/Seoul",
         },
         attendees: [],
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: "email", minutes: 24 * 60 },
-            { method: "popup", minutes: 10 },
-          ],
-        },
       };
 
       auth.getClient().then((auth) => {
@@ -101,11 +98,11 @@ exports.insertEvents = async (dateTimeStart, dateTimeEnd, summary, AttendeesEmai
           },
           function (error, response) {
             if (error) {
-              console.log("Something went wrong: " + error); // If there is an error, log it to the console
+              console.log("Something went wrong: " + error);
               return;
             }
-        console.log("Event created successfully.")
-            console.log("Event details: ", response.data); // Log the event details
+            // console.log("Event created successfully.")
+            // console.log("Event details: ", response.data);
           }
         );
       });
@@ -116,5 +113,3 @@ exports.insertEvents = async (dateTimeStart, dateTimeEnd, summary, AttendeesEmai
     return 0;
   }
 };
-
-// console.log(getEvents("2022-08-01T00:00:00Z", "2022-08-08T00:00:00Z"));
