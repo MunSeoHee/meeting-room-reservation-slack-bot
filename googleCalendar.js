@@ -33,6 +33,9 @@ const auth = new google.auth.GoogleAuth({
 
 exports.getEvents = async (dateTimeStart, dateTimeEnd, meetingRoom = "all") => {
   try {
+    console.log("**************************");
+    console.log(dateTimeStart, dateTimeEnd, meetingRoom);
+    console.log("**************************");
     return new Promise(async (resolve, reject) => {
       let events = Array();
       if (meetingRoom === 'all') {
@@ -51,17 +54,24 @@ exports.getEvents = async (dateTimeStart, dateTimeEnd, meetingRoom = "all") => {
         }
       }
       else {
-        let response = await calendar.events.list({
-          auth: jwtClient,
-          calendarId: CalendarId[meetingRoom],
-          timeMin: dateTimeStart,
-          timeMax: dateTimeEnd,
-          timeZone: "Asia/Seoul",
-          singleEvents: true,
-          orderBy: "startTime",
-        }
-        );
-        events[meetingRoom] = response["data"]["items"];
+        try{
+          if (dateTimeStart.split('-')[1].length < 2) dateTimeStart = dateTimeStart.slice(0,5) + '0' + dateTimeStart.slice(5) + '+09:00';
+          else dateTimeStart += '+09:00';
+          if (dateTimeEnd.split('-')[1].length < 2) dateTimeEnd = dateTimeEnd.slice(0,5) + '0' + dateTimeEnd.slice(5) + '+09:00';
+          else dateTimeEnd += '+09:00';
+
+          let response = await calendar.events.list({
+            auth: jwtClient,
+            calendarId: CalendarId[meetingRoom],
+            timeMin: dateTimeStart,
+            timeMax: dateTimeEnd,
+            timeZone: "Asia/Seoul",
+            singleEvents: true,
+            orderBy: "startTime",
+          });
+          events[meetingRoom] = response["data"]["items"];
+          console.log(events);
+        } catch(error){console.log(error);}
       }
       resolve(events);
     });

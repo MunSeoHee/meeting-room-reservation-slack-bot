@@ -75,7 +75,7 @@ app.view("InsertEvent", async ({ ack, body, view, client }) => {
   const EndTime = view["state"]["values"]["EndTime"]["EndTime"]["selected_time"];
   const useReason = view["state"]["values"]["useReason"]["useReason"]["value"];
   let attendeesEmailJsonList = [];
-
+  console.log(date);
   try {
     for (const userId of attendeesIdList) {
       const createUserInfo = await client.users.info({user: userId});
@@ -100,7 +100,7 @@ app.view("GetEvent", async ({ ack, body, view, client }) => {
     selectedDate + "T23:59:59Z",
     "all"
   );
-  console.log(allEventList);
+
   let jsonBlocks = [];
   for (const [roomTitle, eventList] of Object.entries(allEventList)) {
     jsonBlocks.push({
