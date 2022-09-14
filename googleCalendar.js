@@ -11,7 +11,7 @@ const CalendarId = {
   large: process.env.CALENDAR_LARGE_ID,
   medium: process.env.CALENDAR_MIDIUM_ID,
   small: process.env.CALENDAR_SMALL_ID,
-  test: process.env.CALENDAR_TEST_ID,
+  // test: process.env.CALENDAR_TEST_ID,
 };
 
 const jwtClient = new google.auth.JWT(
@@ -40,8 +40,8 @@ exports.getEvents = async (dateTimeStart, dateTimeEnd, meetingRoom = "all") => {
           let response = await calendar.events.list({
             auth: jwtClient,
             calendarId: value,
-            timeMin: dateTimeStart,
-            timeMax: dateTimeEnd,
+            timeMin: dateTimeStart+'Z',
+            timeMax: dateTimeEnd+'Z',
             timeZone: "Asia/Seoul",
             singleEvents: true,
             orderBy: "startTime",

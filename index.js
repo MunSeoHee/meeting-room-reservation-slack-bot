@@ -2,7 +2,7 @@ const { App } = require("@slack/bolt");
 const blocks = require("./block");
 const googleCalendar = require("./googleCalendar");
 require("dotenv").config();
-
+const meetingRoomTitle = {large:'3층 대회의실(10인)', medium: '4층 중회의실(6인)', small: '4층 소회의실(4인)'};
 const app = new App({
   token: process.env.TOKEN,
   signingSecret: process.env.SIGNING_SECRET,
@@ -65,6 +65,31 @@ app.action("viewGetModal", async ({ body, ack, say, client }) => {
   }
 });
 
+app.action("eventCancel", async ({ body, ack, say, client }) => {
+  await ack();
+  console.log(body['actions']['value']);
+  try {
+    // const result = await client.views.open({
+    //   trigger_id: body.trigger_id,
+    //   view: {
+    //     type: "modal",
+    //     callback_id: "GetEvent",
+    //     title: {
+    //       type: "plain_text",
+    //       text: "회의실 조회 폼",
+    //     },
+    //     blocks: blocks.CalendarGetModal,
+    //     submit: {
+    //       type: "plain_text",
+    //       text: "Submit",
+    //     },
+    //   },
+    // });
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 app.view("InsertEvent", async ({ ack, body, view, client }) => {
   await ack();
   const meetingRoom = view["state"]["values"]["meetingRoom"]["meetingRoom"]["selected_option"]["value"];
@@ -99,10 +124,12 @@ app.view("InsertEvent", async ({ ack, body, view, client }) => {
 app.view("GetEvent", async ({ ack, body, view, client }) => {
   await ack();
   const selectedDate = view["state"]["values"]["input"]["datepicker"]["selected_date"];
+  const meetingRoom = view["state"]["values"]["meetingRoom"]["meetingRoom"]["selected_option"]["value"];
+
   const allEventList = await googleCalendar.getEvents(
-    selectedDate + "T00:00:00Z",
-    selectedDate + "T23:59:59Z",
-    "all"
+    selectedDate + "T00:00:00",
+    selectedDate + "T23:59:59",
+    meetingRoom
   );
 
   let jsonBlocks = [];
@@ -115,7 +142,7 @@ app.view("GetEvent", async ({ ack, body, view, client }) => {
       elements: [
         {
           type: "plain_text",
-          text: roomTitle,
+          text: meetingRoomTitle[roomTitle],
           emoji: false,
         },
       ],
@@ -135,21 +162,22 @@ app.view("GetEvent", async ({ ack, body, view, client }) => {
       });
       jsonBlocks.push({
         type: "section",
-        fields: [
-          {
+        text: {
+          type: "mrkdwn",
+          text: event.start.dateTime.split("T")[1].split("+")[0].slice(0, 5) +
+          "-" +
+          event.end.dateTime.split("T")[1].split("+")[0].slice(0, 5),
+        },
+        accessory: {
+          type: "button",
+          text: {
             type: "plain_text",
-            text: event.creator.email,
             emoji: true,
+            text: "예약 취소"
           },
-          {
-            type: "plain_text",
-            text:
-              event.start.dateTime.split("T")[1].split("+")[0].slice(0, 5) +
-              "-" +
-              event.end.dateTime.split("T")[1].split("+")[0].slice(0, 5),
-            emoji: true,
-          },
-        ],
+          value: event['id'],
+          action_id: "eventCancel",
+        }
       });
     }
   }

@@ -142,13 +142,6 @@ module.exports = {
   ],
   Main: [
     {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: "회의실 도우미",
-      },
-    },
-    {
       type: "divider",
     },
     {
@@ -202,6 +195,58 @@ module.exports = {
         type: "plain_text",
         text: "날짜를 선택해 주세요",
         emoji: false,
+      },
+    },
+    {
+      type: "input",
+      block_id: "meetingRoom",
+      element: {
+        type: "static_select",
+        placeholder: {
+          type: "plain_text",
+          text: "Select an item",
+          emoji: true,
+        },
+        action_id: "meetingRoom",
+        options: [
+          {
+            text: {
+              type: "plain_text",
+              text: "3층 대회의실 (10인)",
+              emoji: true,
+            },
+            value: "large",
+          },
+          {
+            text: {
+              type: "plain_text",
+              text: "4층 중회의실 (6인)",
+              emoji: true,
+            },
+            value: "medium",
+          },
+          {
+            text: {
+              type: "plain_text",
+              text: "4층 소회의실 (4인)",
+              emoji: true,
+            },
+            value: "small",
+          },
+          {
+            text: {
+              type: "plain_text",
+              text: "전체",
+              emoji: true,
+            },
+            value: "all",
+          },
+        ],
+      },
+      label: {
+        type: "plain_text",
+        text: "회의실",
+        emoji: true,
       },
     },
   ],
