@@ -33,9 +33,6 @@ const auth = new google.auth.GoogleAuth({
 
 exports.getEvents = async (dateTimeStart, dateTimeEnd, meetingRoom = "all") => {
   try {
-    console.log("**************************");
-    console.log(dateTimeStart, dateTimeEnd, meetingRoom);
-    console.log("**************************");
     return new Promise(async (resolve, reject) => {
       let events = Array();
       if (meetingRoom === 'all') {
@@ -70,7 +67,6 @@ exports.getEvents = async (dateTimeStart, dateTimeEnd, meetingRoom = "all") => {
             orderBy: "startTime",
           });
           events[meetingRoom] = response["data"]["items"];
-          console.log(events);
         } catch(error){console.log(error);}
       }
       resolve(events);
@@ -85,7 +81,11 @@ exports.insertEvents = async (dateTimeStart, dateTimeEnd, attendeesEmailList, us
   try {
     return new Promise(async (resolve, reject) => {
       const event = await this.getEvents(dateTimeStart, dateTimeEnd, meetingRoom);
-      console.log(event);
+      if (event[meetingRoom].length > 0) {
+        reject(new Error("event time overlap"));
+        return;
+      }
+
       var calendarEvent = {
         summary: useReason,
         start: {
@@ -111,8 +111,6 @@ exports.insertEvents = async (dateTimeStart, dateTimeEnd, attendeesEmailList, us
               console.log("Something went wrong: " + error);
               return;
             }
-            // console.log("Event created successfully.")
-            // console.log("Event details: ", response.data);
           }
         );
       });

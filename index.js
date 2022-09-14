@@ -75,20 +75,24 @@ app.view("InsertEvent", async ({ ack, body, view, client }) => {
   const EndTime = view["state"]["values"]["EndTime"]["EndTime"]["selected_time"];
   const useReason = view["state"]["values"]["useReason"]["useReason"]["value"];
   let attendeesEmailJsonList = [];
-  console.log(date);
+
   try {
     for (const userId of attendeesIdList) {
       const createUserInfo = await client.users.info({user: userId});
       attendeesEmailJsonList.push({'email' : createUserInfo["user"]["profile"]["email"]});
     }
 
-    const err = await googleCalendar.insertEvents(date + "T" + startTime + ":00", date + "T" + EndTime + ":00", attendeesEmailJsonList, useReason, meetingRoom);
+    await googleCalendar.insertEvents(date + "T" + startTime + ":00", date + "T" + EndTime + ":00", attendeesEmailJsonList, useReason, meetingRoom);
     await client.chat.postMessage({
       channel: body.user.id,
-      text: `${view}`,
+      text: '예약 성공😁',
     });
   } catch (error) {
     console.error(error);
+    await client.chat.postMessage({
+      channel: body.user.id,
+      text: '예약 실패😂 : 해당 시간에 중복되는 예약 건이 존재합니다',
+    });
   }
 });
 
