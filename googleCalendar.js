@@ -11,7 +11,7 @@ const CalendarId = {
   large: process.env.CALENDAR_LARGE_ID,
   medium: process.env.CALENDAR_MIDIUM_ID,
   small: process.env.CALENDAR_SMALL_ID,
-  // test: process.env.CALENDAR_TEST_ID,
+  test: process.env.CALENDAR_TEST_ID,
 };
 
 const jwtClient = new google.auth.JWT(
@@ -103,8 +103,34 @@ exports.insertEvents = async (dateTimeStart, dateTimeEnd, attendeesEmailList, us
         calendar.events.insert(
           {
             auth: auth,
-            calendarId: CalendarId.test,
+            calendarId: CalendarId[meetingRoom],
             resource: calendarEvent,
+          },
+          function (error, response) {
+            if (error) {
+              console.log("Something went wrong: " + error);
+              return;
+            }
+          }
+        );
+      });
+      resolve();
+    })
+  } catch (error) {
+    console.log(`Error at getEvents --> ${error}`);
+    return 0;
+  }
+};
+
+exports.deleteEvents = async (eventId, meetingRoom) => {
+  try {
+    return new Promise(async (resolve, reject) => {
+      auth.getClient().then((auth) => {
+        calendar.events.delete(
+          {
+            auth: auth,
+            calendarId: CalendarId[meetingRoom],
+            eventId: eventId
           },
           function (error, response) {
             if (error) {

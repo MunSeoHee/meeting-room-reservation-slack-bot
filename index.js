@@ -2,7 +2,7 @@ const { App } = require("@slack/bolt");
 const blocks = require("./block");
 const googleCalendar = require("./googleCalendar");
 require("dotenv").config();
-const meetingRoomTitle = {large:'3층 대회의실(10인)', medium: '4층 중회의실(6인)', small: '4층 소회의실(4인)'};
+const meetingRoomTitle = {large:'3층 대회의실(10인)', medium: '4층 중회의실(6인)', small: '4층 소회의실(4인)', test: '테스트'};
 const app = new App({
   token: process.env.TOKEN,
   signingSecret: process.env.SIGNING_SECRET,
@@ -67,24 +67,14 @@ app.action("viewGetModal", async ({ body, ack, say, client }) => {
 
 app.action("eventCancel", async ({ body, ack, say, client }) => {
   await ack();
-  console.log(body['actions']['value']);
   try {
-    // const result = await client.views.open({
-    //   trigger_id: body.trigger_id,
-    //   view: {
-    //     type: "modal",
-    //     callback_id: "GetEvent",
-    //     title: {
-    //       type: "plain_text",
-    //       text: "회의실 조회 폼",
-    //     },
-    //     blocks: blocks.CalendarGetModal,
-    //     submit: {
-    //       type: "plain_text",
-    //       text: "Submit",
-    //     },
-    //   },
-    // });
+    const value = body['actions'][0]['value'].split("||");
+    console.log(value);
+    googleCalendar.deleteEvents(value[0], value[1]);
+    await client.chat.postMessage({
+      channel: body.user.id,
+      text: '예약 취소 성공😁',
+    });
   } catch (error) {
     console.error(error);
   }
@@ -175,7 +165,7 @@ app.view("GetEvent", async ({ ack, body, view, client }) => {
             emoji: true,
             text: "예약 취소"
           },
-          value: event['id'],
+          value: event['id'] + "||" + roomTitle,
           action_id: "eventCancel",
         }
       });
