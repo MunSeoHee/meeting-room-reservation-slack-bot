@@ -165,15 +165,6 @@ module.exports = {
           },
           action_id: "viewGetModal",
         },
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "예약 취소 및 수정",
-            emoji: false,
-          },
-          action_id: "viewUpdateModal",
-        },
       ],
     },
   ],
